@@ -6,23 +6,28 @@ module OmniAuth
       option :name, :pipefy
 
       option :client_options,
-             site: 'https://app.pipefy.com',
+             site: ENV.fetch('PIPEFY_URL', 'https://app.pipefy.com'),
              authorize_url: '/oauth/authorize'
 
-      uid { raw_info['resource_owner_id'] }
+       uid { user_info['id'] }
 
-      info do
-        {
-          username: raw_info['username'],
-          name: raw_info['name'],
-          email: raw_info['email'],
-          avatar: raw_info['avatar_url']
-        }
-      end
+       info do
+         {
+           user_id: user_info['id'],
+           username: user_info['username'],
+           name: user_info['name'],
+           email: user_info['email'],
+           avatar: user_info['avatar_url']
+         }
+       end
 
-      def raw_info
-        @raw_info ||= access_token.get('/oauth/token/info').parsed
-      end
+       def token_info
+         @token_info ||= access_token.to_h
+       end
+
+       def user_info
+         @user_info ||= token_info['user']
+       end
 
       def callback_url
         full_host + script_name + callback_path
